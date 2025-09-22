@@ -1,0 +1,22 @@
+@page
+@model TestApp.Pages.IndexModel
+@{
+    ViewData["Title"] = "Calculator";
+}
+
+<h2>Simple Calculator</h2>
+
+<form method="post">
+    <label>First Number:</label>
+    <input type="number" asp-for="FirstNumber" />
+    <br />
+    <label>Second Number:</label>
+    <input type="number" asp-for="SecondNumber" />
+    <br />
+    <button type="submit">Calculate</button>
+</form>
+
+@if (Model.Result != null)
+{
+    <p>Sum: @Model.Result.Sum</p>
+}
