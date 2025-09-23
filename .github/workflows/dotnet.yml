@@ -2,7 +2,7 @@ name: Build, Test, SonarCloud
 
 on:
   push:
-    branches: [ "main" ] # Change if default branch differs
+    branches: [ "main" ] # # Adjust if needed
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -12,17 +12,17 @@ permissions:
 
 jobs:
   quality:
-    runs-on: windows-latest  # Recommended for SonarScanner for .NET
+    runs-on: windows-latest # # Windows is recommended for dotnet-sonarscanner
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for accurate blame/PR decoration
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x  # Pin to specific version if needed
+          dotnet-version: 8.0.x
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
@@ -47,31 +47,26 @@ jobs:
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
       - name: Restore
-        run: |
-          dotnet restore TestApp.sln  # Change to your solution path if different
+        run: dotnet restore TodoApi.sln # # Root solution
 
       - name: Build
-        run: |
-          dotnet build TestApp.sln --configuration Release --no-restore
+        run: dotnet build TodoApi.sln --configuration Release --no-restore
 
       - name: Test
-        run: |
-          dotnet test TestApp.Tests/TestApp.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
 
       - name: SonarCloud Analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # For PR decoration
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Create in repo Secrets
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # PR decoration
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # # Add in repo secrets
         shell: powershell
         run: |
           .\.sonar\scanner\dotnet-sonarscanner begin `
-            /k:"varunusstaffing043-sketch_.net-test-" `  # Project key
-            /o:"varunusstaffing043-sketch" `             # Org key
+            /k:"varunusstaffing043-sketch_.net-test-" ` # # Your project key
+            /o:"varunusstaffing043-sketch" `            # # Your org key
             /d:sonar.token="${{ env.SONAR_TOKEN }}" `
             /d:sonar.host.url="https://sonarcloud.io" `
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.cobertura.xml,**/coverage.opencover.xml" `
             /d:sonar.coverage.exclusions="**/*.cshtml,**/bin/**,**/obj/**,**/*.g.cs,**/*.designer.cs"
-
-          dotnet build TestApp.sln --configuration Release
-
+          dotnet build TodoApi.sln --configuration Release
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
