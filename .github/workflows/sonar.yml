@@ -12,6 +12,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,24 +30,21 @@ jobs:
       - name: Sonar begin
         run: >
           dotnet sonarscanner begin
-          /k:"varunusstaffing043-sketch_TestApp"                     # 🔧 Replace 'your-org' with your actual SonarCloud organization key
-          /o:"varunusstaffing043-sketch"                             # 🔧 Replace 'your-org' with your actual SonarCloud organization key
+          /k:"varunusstaffing043-sketch_TestApp"
+          /o:"varunusstaffing043-sketch"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
-          /s:"TestApp.sln"                          # ✅ This is correct based on your solution name
-
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Restore
-        run: dotnet restore TestApp.sln             # ✅ This matches your solution file
+        run: dotnet restore TestApp.sln
 
       - name: Build
         run: dotnet build TestApp.sln --no-restore --configuration Release
 
       - name: Test with coverage
-        run: dotnet test TestApp.Tests/TestApp.Tests.csproj --no-build --configuration Release --collect "XPlat Code Coverage;Format=opencover"
-        # ✅ This matches your test project path
+        run: dotnet test TestApp.sln --no-build --configuration Release --collect "XPlat Code Coverage;Format=opencover"
 
       - name: Sonar end
         run: dotnet sonarscanner end
