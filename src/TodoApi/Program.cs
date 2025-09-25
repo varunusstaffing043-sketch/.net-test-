@@ -40,5 +40,8 @@ app.MapPost("/todo", (string item) =>
 // Prefer non-blocking shutdown
 await app.RunAsync();
 
-// Expose Program for WebApplicationFactory in tests (static to satisfy S1118)
-public partial class Program { }
+// Marker for WebApplicationFactory (non-static to be valid generic argument)
+public partial class Program
+{
+    protected Program() { } // satisfies Sonar S1118
+}
