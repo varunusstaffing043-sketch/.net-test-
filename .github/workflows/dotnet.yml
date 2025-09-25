@@ -43,8 +43,8 @@ jobs:
           dotnet-sonarscanner begin
           /k:"varunusstaffing043-sketch_.net-test-"
           /o:"varunusstaffing043-sketch"
-          /d:sonar.token=${{ secrets.SONAR_TOKEN }}
-          /d:sonar.host.url=https://sonarcloud.io
+          /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
+          /d:sonar.host.url:"https://sonarcloud.io"
 
       - name: Restore
         run: dotnet restore TodoApi.sln
@@ -55,7 +55,7 @@ jobs:
       - name: Test with coverage
         run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
 
-      - name: Find coverage
+      - name: Locate coverage file
         id: coverage
         shell: pwsh
         run: |
@@ -67,5 +67,5 @@ jobs:
         shell: pwsh
         run: >
           dotnet-sonarscanner end
-          /d:sonar.token=${{ secrets.SONAR_TOKEN }}
-          /d:sonar.cs.coverageReportPaths=${{ steps.coverage.outputs.path }}
+          /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
+          /d:sonar.cs.coverageReportPaths:"${{ steps.coverage.outputs.path }}"
