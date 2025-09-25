@@ -2,30 +2,35 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+// Expose Program for WebApplicationFactory in integration tests
+public partial class Program { } // enables WebApplicationFactory in tests
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
-builder.Services.AddEndpointsApiExplorer();   // # what we have changed
-builder.Services.AddSwaggerGen();             // # what we have changed
+builder.Services.AddEndpointsApiExplorer();   // Swagger/OpenAPI metadata
+builder.Services.AddSwaggerGen();             // Swagger generator
 
 var app = builder.Build();
 
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();                         // # what we have changed
-    app.UseSwaggerUI();                       // # what we have changed
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+// Health endpoint
 app.MapGet("/health", () => Results.Ok("OK"))
    .WithName("HealthCheck")
-   .WithOpenApi();                            // # what we have changed
+   .WithOpenApi();
 
+// Simple in-memory todos
 var todos = new List<string> { "Buy milk", "Write tests" };
 
 app.MapGet("/todo", () => Results.Ok(todos))
    .WithName("GetTodos")
-   .WithOpenApi();                            // # what we have changed
+   .WithOpenApi();
 
 app.MapPost("/todo", (string item) =>
 {
@@ -33,7 +38,7 @@ app.MapPost("/todo", (string item) =>
     return Results.Created($"/todo/{todos.Count - 1}", item);
 })
 .WithName("AddTodo")
-.WithOpenApi();                                // # what we have changed
+.WithOpenApi();
 
-await app.RunAsync(); // replaces: app.Run();
-
+// Prefer non-blocking shutdown per Sonar rule S6966
+await app.RunAsync();
