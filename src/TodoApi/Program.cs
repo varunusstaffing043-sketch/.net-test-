@@ -3,13 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 // Expose Program for WebApplicationFactory in integration tests
-public partial class Program { } // enables WebApplicationFactory in tests
+public partial class Program { }
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
-builder.Services.AddEndpointsApiExplorer();   // Swagger/OpenAPI metadata
-builder.Services.AddSwaggerGen();             // Swagger generator
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -40,5 +40,5 @@ app.MapPost("/todo", (string item) =>
 .WithName("AddTodo")
 .WithOpenApi();
 
-// Prefer non-blocking shutdown per Sonar rule S6966
+// Prefer non-blocking shutdown
 await app.RunAsync();
