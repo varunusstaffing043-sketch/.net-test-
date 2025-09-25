@@ -4,30 +4,28 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();           // # what we have changed: ensures endpoint metadata is discoverable
-builder.Services.AddSwaggerGen();                     // # what we have changed: registers Swagger generator
+// Services
+builder.Services.AddEndpointsApiExplorer();   // # what we have changed
+builder.Services.AddSwaggerGen();             // # what we have changed
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();                                 // # what we have changed: enables OpenAPI document
-    app.UseSwaggerUI();                               // # what we have changed: enables Swagger UI
+    app.UseSwagger();                         // # what we have changed
+    app.UseSwaggerUI();                       // # what we have changed
 }
 
-// Health probe
 app.MapGet("/health", () => Results.Ok("OK"))
    .WithName("HealthCheck")
-   .WithOpenApi();                                    // # what we have changed: requires Microsoft.AspNetCore.OpenApi
+   .WithOpenApi();                            // # what we have changed
 
-// Sample in‑memory todo list
 var todos = new List<string> { "Buy milk", "Write tests" };
 
 app.MapGet("/todo", () => Results.Ok(todos))
    .WithName("GetTodos")
-   .WithOpenApi();                                    // # what we have changed
+   .WithOpenApi();                            // # what we have changed
 
 app.MapPost("/todo", (string item) =>
 {
@@ -35,6 +33,7 @@ app.MapPost("/todo", (string item) =>
     return Results.Created($"/todo/{todos.Count - 1}", item);
 })
 .WithName("AddTodo")
-.WithOpenApi();                                       // # what we have changed
+.WithOpenApi();                                // # what we have changed
 
 app.Run();
+
