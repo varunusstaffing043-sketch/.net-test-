@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>  <!-- # what we have changed: align with the .NET 9 SDK shown in CI -->
+    <TargetFramework>net9.0</TargetFramework> <!-- # what we have changed -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" /> <!-- # what we have changed: added to provide .WithOpenApi() types -->
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />       <!-- # what we have changed: added for Swagger UI generation -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" /> <!-- # what we have changed -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />       <!-- # what we have changed -->
   </ItemGroup>
-
 </Project>
+
