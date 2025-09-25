@@ -26,7 +26,7 @@ jobs:
 
       - name: Begin SonarCloud analysis
         run: |
-          dotnet-sonarscanner begin /k:"varunusstaffing043-sketch_.net-test-" /o:"varunusstaffing043-sketch_.net-test-" /d:sonar.token=${{ secrets.SONAR_TOKEN }} /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+          dotnet-sonarscanner begin /k:"varunusstaffing043-sketch_.net-test-" /o:"varunusstaffing043-sketch" /d:sonar.token=${{ secrets.SONAR_TOKEN }} /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
       - name: Restore dependencies
         run: dotnet restore
