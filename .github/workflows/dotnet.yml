@@ -41,7 +41,6 @@ jobs:
           /o:"varunusstaffing043-sketch"
           /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
           /d:sonar.host.url:"https://sonarcloud.io"
-          /d:sonar.cs.coverageReportPaths:"${{ steps.coverage.outputs.path }}"
 
       - name: Restore
         run: dotnet restore TodoApi.sln
@@ -62,3 +61,7 @@ jobs:
 
       - name: SonarCloud End
         shell: pwsh
+        run: >
+          dotnet-sonarscanner end
+          /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
+          /d:sonar.cs.coverageReportPaths:"${{ steps.coverage.outputs.path }}"
