@@ -1,47 +1,64 @@
-name: SonarCloud .NET Analysis
+name: .NET CI with SonarCloud and Coverage
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: Build and Analyze
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
-      - name: Install SonarScanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
-      - name: Begin SonarCloud analysis
+      - name: Install SonarScanner for .NET
+        shell: pwsh
         run: |
-          dotnet-sonarscanner begin /k:"varunusstaffing043-sketch_.net-test-" /o:"varunusstaffing043-sketch" /d:sonar.token=${{ secrets.SONAR_TOKEN }} /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+          dotnet tool update --global dotnet-sonarscanner --version 10.4.1
+          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: SonarCloud Begin
+        shell: pwsh
+        run: >
+          dotnet-sonarscanner begin
+          /k:"varunusstaffing043-sketch_.net-test-"
+          /o:"varunusstaffing043-sketch"
+          /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
+          /d:sonar.host.url:"https://sonarcloud.io"
+          /d:sonar.cs.coverageReportPaths:"${{ steps.coverage.outputs.path }}"
 
-      - name: Build solution
-        run: dotnet build --no-restore
+      - name: Restore
+        run: dotnet restore TodoApi.sln
 
-      - name: Run tests with coverage
+      - name: Build
+        run: dotnet build TodoApi.sln --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      - name: Locate coverage file
+        id: coverage
+        shell: pwsh
         run: |
-          dotnet test YourProject.Tests/YourProject.Tests.csproj --no-build --collect:"XPlat Code Coverage"
+          $file = Get-ChildItem -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+          if (-not $file) { throw "coverage.cobertura.xml not found" }
+          echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Convert coverage to OpenCover
-        run: |
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-          reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:HtmlInline_AzurePipelines;Cobertura
-
-      - name: End SonarCloud analysis
-        run: dotnet-sonarscanner end /d:sonar.token=${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud End
+        shell: pwsh
