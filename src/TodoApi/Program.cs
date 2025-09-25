@@ -40,5 +40,5 @@ app.MapPost("/todo", (string item) =>
 // Prefer non-blocking shutdown
 await app.RunAsync();
 
-// Expose Program for WebApplicationFactory in integration tests
-public partial class Program { }
+// Expose Program for WebApplicationFactory in tests (static to satisfy S1118)
+public static partial class Program { }
