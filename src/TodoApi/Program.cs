@@ -41,4 +41,4 @@ app.MapPost("/todo", (string item) =>
 await app.RunAsync();
 
 // Expose Program for WebApplicationFactory in tests (static to satisfy S1118)
-public static partial class Program { }
+public partial class Program { }
