@@ -45,6 +45,7 @@ jobs:
           /o:"varunusstaffing043-sketch"
           /d:sonar.token=${{ secrets.SONAR_TOKEN }}
           /d:sonar.host.url=https://sonarcloud.io
+          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml
 
       - name: Restore
         run: dotnet restore TodoApi.sln
@@ -55,17 +56,6 @@ jobs:
       - name: Test with coverage
         run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
 
-      - name: Find coverage
-        id: coverage
-        shell: pwsh
-        run: |
-          $file = Get-ChildItem -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
-          if (-not $file) { throw "coverage.cobertura.xml not found" }
-          echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
-
       - name: SonarCloud End
         shell: pwsh
-        run: >
-          dotnet-sonarscanner end
-          /d:sonar.token=${{ secrets.SONAR_TOKEN }}
-          /d:sonar.cs.coverageReportPaths=${{ steps.coverage.outputs.path }}
+        run: dotnet-sonarscanner end /d:sonar.token=${{ secrets.SONAR_TOKEN }}
