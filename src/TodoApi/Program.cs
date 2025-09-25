@@ -2,9 +2,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-// Expose Program for WebApplicationFactory in integration tests
-public partial class Program { }
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
@@ -42,3 +39,6 @@ app.MapPost("/todo", (string item) =>
 
 // Prefer non-blocking shutdown
 await app.RunAsync();
+
+// Expose Program for WebApplicationFactory in integration tests
+public partial class Program { }
