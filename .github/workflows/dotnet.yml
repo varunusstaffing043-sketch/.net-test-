@@ -45,7 +45,7 @@ jobs:
           /o:"varunusstaffing043-sketch"
           /d:sonar.token=${{ secrets.SONAR_TOKEN }}
           /d:sonar.host.url=https://sonarcloud.io
-          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml
+          /d:sonar.cs.coverageReportPaths=**/TestResults/**/coverage.cobertura.xml
 
       - name: Restore
         run: dotnet restore TodoApi.sln
