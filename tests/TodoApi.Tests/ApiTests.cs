@@ -1,5 +1,5 @@
 using System.Net;
-using System.Threading.Tasks; // required for Task
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
