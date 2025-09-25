@@ -35,4 +35,5 @@ app.MapPost("/todo", (string item) =>
 .WithName("AddTodo")
 .WithOpenApi();                                // # what we have changed
 
-app.Run();
+await app.RunAsync(); // replaces: app.Run();
+
