@@ -40,7 +40,7 @@ jobs:
           /k:"varunusstaffing043-sketch_.net-test-"
           /o:"varunusstaffing043-sketch"
           /d:sonar.token:"${{ secrets.SONAR_TOKEN }}"
-          /d:sonar.host.url:"https://sonarcloud.io"
+          /d:sonar.host.url:"https://sonarcloud.io./"
 
       - name: Restore
         run: dotnet restore TodoApi.sln
