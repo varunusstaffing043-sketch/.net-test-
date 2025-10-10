@@ -1,45 +1,62 @@
-name: .NET Test Workflow
+name: .NET CI with SonarCloud
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  test:
-    name: Run .NET Tests
-    runs-on: windows-latest  # or ubuntu-latest if cross-platform
+  build:
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'  # adjust to match your project
+          dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Run tests
-        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --logger "trx"
-
-      # Optional: Publish test results
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
+      - name: Cache NuGet
+        uses: actions/cache@v4
         with:
-          name: test-results
-          path: src/TodoApi/TodoApi.csproj
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
-      # Optional: SonarCloud integration
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: .
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_KEY:${{ secrets.PROJECT_KEY }}
-          SONAR_ORGANIZATION:${{ secrets.ORGANIZATION_KEY }}
+      - name: Install SonarScanner for .NET
+        shell: pwsh
+        run: |
+          dotnet tool update --global dotnet-sonarscanner --version 10.4.1
+          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+
+      - name: SonarCloud Begin
+        shell: pwsh
+        run: >
+          dotnet-sonarscanner begin
+          /k:${{ secrets.PROJECT_KEY }}
+          /o:${{ secrets.ORGANIZATION_KEY }}
+          /d:sonar.token=${{ secrets.SONAR_TOKEN }}
+          /d:sonar.host.url=https://sonarcloud.io
+          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml # Point exactly to your results directory
+
+
+      - name: Restore
+        run: dotnet restore TodoApi.sln
+
+      - name: Build
+        run: dotnet build TodoApi.sln --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory tests/TodoApi.Tests/TestResults
+
+      - name: SonarCloud End
+        shell: pwsh
+        run: dotnet-sonarscanner end /d:sonar.token=${{ secrets.SONAR_TOKEN }}
