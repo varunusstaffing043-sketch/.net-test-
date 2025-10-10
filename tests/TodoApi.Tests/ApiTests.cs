@@ -3,20 +3,23 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
-public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
+namespace TodoApi.Tests 
 {
-    private readonly WebApplicationFactory<Program> _factory;
-
-    public ApiTests(WebApplicationFactory<Program> factory)
+    public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
     {
-        _factory = factory;
-    }
+        private readonly WebApplicationFactory<Program> _factory;
 
-    [Fact]
-    public async Task Health_Returns_OK()
-    {
-        var client = _factory.CreateClient();
-        var resp = await client.GetAsync("/health");
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        public ApiTests(WebApplicationFactory<Program> factory)
+        {
+            _factory = factory;
+        }
+
+        [Fact]
+        public async Task Health_Returns_OK()
+        {
+            var client = _factory.CreateClient();
+            var resp = await client.GetAsync("/health");
+            Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        }
     }
-}
+} 
