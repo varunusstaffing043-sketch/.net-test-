@@ -45,7 +45,8 @@ jobs:
           /o:"${{ secrets.ORGANIZATION_KEY }}"
           /d:sonar.token=${{ secrets.SONAR_TOKEN }}
           /d:sonar.host.url=https://sonarcloud.io
-          /d:sonar.cs.coverageReportPaths=**/TestResults/**/coverage.cobertura.xml
+          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml # Point exactly to your results directory
+
 
       - name: Restore
         run: dotnet restore TodoApi.sln
@@ -54,7 +55,7 @@ jobs:
         run: dotnet build TodoApi.sln --configuration Release --no-restore
 
       - name: Test with coverage
-        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory tests/TodoApi.Tests/TestResults
 
       - name: SonarCloud End
         shell: pwsh
