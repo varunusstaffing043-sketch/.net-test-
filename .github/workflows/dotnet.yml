@@ -15,14 +15,19 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      # 🔁 Full clone to avoid shallow clone warning in SonarCloud
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # 🛠️ Setup .NET 9 SDK
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
+      # 📦 Cache NuGet packages
       - name: Cache NuGet
         uses: actions/cache@v4
         with:
@@ -31,12 +36,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      # 🔍 Install SonarScanner CLI
       - name: Install SonarScanner for .NET
         shell: pwsh
         run: |
           dotnet tool update --global dotnet-sonarscanner --version 10.4.1
           echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
 
+      # 🚀 Start SonarCloud analysis
       - name: SonarCloud Begin
         shell: pwsh
         run: >
@@ -45,18 +52,21 @@ jobs:
           /o:${{ secrets.ORGANIZATION_KEY }}
           /d:sonar.token=${{ secrets.SONAR_TOKEN }}
           /d:sonar.host.url=https://sonarcloud.io
-          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml # Point exactly to your results directory
+          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml
 
-
+      # 🔧 Restore dependencies
       - name: Restore
         run: dotnet restore TodoApi.sln
 
+      # 🏗️ Build solution
       - name: Build
         run: dotnet build TodoApi.sln --configuration Release --no-restore
 
+      # 🧪 Run tests with coverage
       - name: Test with coverage
         run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory tests/TodoApi.Tests/TestResults
 
+      # 📤 End SonarCloud analysis
       - name: SonarCloud End
         shell: pwsh
         run: dotnet-sonarscanner end /d:sonar.token=${{ secrets.SONAR_TOKEN }}
