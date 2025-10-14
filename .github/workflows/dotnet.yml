@@ -35,14 +35,14 @@ jobs:
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
 
       - name: Restore dependencies
-        run: dotnet restore DemoSolution.sln
+        run: dotnet restore TodoApi.sln
 
       - name: Build solution
-        run: dotnet build DemoSolution.sln --no-restore
+        run: dotnet build TodoApi.sln --no-restore
 
       - name: Run tests with coverage           # solution-level coverage using MSBuild Coverlet
         run: |
-          dotnet test Demo.Tests/Demo.Tests.csproj --no-build --verbosity normal \
+          dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build --verbosity normal \
             /p:CollectCoverage=true \
             /p:CoverletOutputFormat=opencover \
             /p:CoverletOutput=TestResults/coverage.opencover.xml
