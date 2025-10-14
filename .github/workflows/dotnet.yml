@@ -1,4 +1,4 @@
-name: SonarCloud Analysis (Flattened Coverage Path)
+name: SonarCloud Analysis (Glob Coverage Path)
 
 on:
   push:
@@ -32,8 +32,8 @@ jobs:
             /o:"varunusstaffing043-sketch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml" \
-            /d:sonar.cs.coveragecobertura.reportPaths="TestResults/coverage.cobertura.xml"
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.cs.coveragecobertura.reportPaths="**/TestResults/**/coverage.cobertura.xml"
 
       - name: Restore dependencies
         run: dotnet restore TodoApi.sln
@@ -45,20 +45,18 @@ jobs:
         run: |
           dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build \
             /p:CollectCoverage=true \
-            /p:CoverletOutput=TestResults/coverage.opencover.xml \
             /p:CoverletOutputFormat=opencover \
-            /p:CoverletOutputDir=TestResults
+            /p:CoverletOutput=TestResults/coverage.opencover.xml
 
       - name: Run tests with coverage (Cobertura)
         run: |
           dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build \
             /p:CollectCoverage=true \
-            /p:CoverletOutput=TestResults/coverage.cobertura.xml \
             /p:CoverletOutputFormat=cobertura \
-            /p:CoverletOutputDir=TestResults
+            /p:CoverletOutput=TestResults/coverage.cobertura.xml
 
-      - name: Show TestResults directory
-        run: ls -R TestResults || true
+      - name: Show all TestResults folders
+        run: ls -R tests/*/TestResults || true
 
       - name: List coverage files
         run: find . -type f -name 'coverage*' -print || true
