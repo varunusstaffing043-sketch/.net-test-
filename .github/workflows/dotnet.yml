@@ -32,7 +32,8 @@ jobs:
             /o:"varunusstaffing043-sketch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml" \
+            /d:sonar.coverageReportPaths="**/TestResults/coverage.cobertura.xml"
 
       - name: Restore dependencies
         run: dotnet restore TodoApi.sln
@@ -46,6 +47,28 @@ jobs:
             /p:CollectCoverage=true \
             /p:CoverletOutputFormat=opencover \
             /p:CoverletOutput=TestResults/coverage.opencover.xml
+      - name: Show TestResults directories (diagnostic)
+        run: |
+          echo "Listing TestResults directories"
+          ls -R tests/*/TestResults || true
+
+      - name: List coverage files (diagnostic)
+        run: |
+          echo "Finding coverage files"
+          find . -type f -name 'coverage*' -print || true
+
+      - name: Show coverage file snippets (diagnostic)
+        run: |
+          if [ -f tests/TodoApi.Tests/TestResults/coverage.opencover.xml ]; then
+            echo '=== BEGIN coverage.opencover.xml ==='
+            head -n 80 tests/TodoApi.Tests/TestResults/coverage.opencover.xml || true
+            echo '=== END coverage.opencover.xml ==='
+          fi
+          if [ -f tests/TodoApi.Tests/TestResults/coverage.cobertura.xml ]; then
+            echo '=== BEGIN coverage.cobertura.xml ==='
+            head -n 80 tests/TodoApi.Tests/TestResults/coverage.cobertura.xml || true
+            echo '=== END coverage.cobertura.xml ==='
+          fi
       - name: End SonarCloud analysis
         run: |
           dotnet-sonarscanner end \
