@@ -1,72 +1,52 @@
-name: .NET CI with SonarCloud
+name: SonarCloud analysis
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
-permissions:
-  contents: read
-  pull-requests: read
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: windows-latest
+  Analysis:
+    runs-on: ubuntu-latest
 
     steps:
-      # 🔁 Full clone to avoid shallow clone warning in SonarCloud
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 🛠️ Setup .NET 9 SDK
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9.0.x'
 
-      # 📦 Cache NuGet packages
-      - name: Cache NuGet
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+      - name: Install SonarCloud scanner
+        run: dotnet tool install --global dotnet-sonarscanner
 
-      # 🔍 Install SonarScanner CLI
-      - name: Install SonarScanner for .NET
-        shell: pwsh
+      - name: Begin SonarCloud analysis
         run: |
-          dotnet tool update --global dotnet-sonarscanner --version 10.4.1
-          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+          dotnet-sonarscanner begin \
+            /k:"varunusstaffing043-sketch_.net-test-" \
+            /o:"varunusstaffing043-sketch" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
 
-      # 🚀 Start SonarCloud analysis
-      - name: SonarCloud Begin
-        shell: pwsh
-        run: >
-          dotnet-sonarscanner begin
-          /k:${{ secrets.PROJECT_KEY }}
-          /o:${{ secrets.ORGANIZATION_KEY }}
-          /d:sonar.token=${{ secrets.SONAR_TOKEN }}
-          /d:sonar.host.url=https://sonarcloud.io
-          /d:sonar.cs.coverageReportPaths=tests/TodoApi.Tests/TestResults/**/coverage.cobertura.xml
+      - name: Restore dependencies
+        run: dotnet restore DemoSolution.sln
 
-      # 🔧 Restore dependencies
-      - name: Restore
-        run: dotnet restore TodoApi.sln
+      - name: Build solution
+        run: dotnet build DemoSolution.sln --no-restore
 
-      # 🏗️ Build solution
-      - name: Build
-        run: dotnet build TodoApi.sln --configuration Release --no-restore
-
-      # 🧪 Run tests with coverage
-      - name: Test with coverage
-        run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory tests/TodoApi.Tests/TestResults
-
-      # 📤 End SonarCloud analysis
-      - name: SonarCloud End
-        shell: pwsh
-        run: dotnet-sonarscanner end /d:sonar.token=${{ secrets.SONAR_TOKEN }}
+      - name: Run tests with coverage           # solution-level coverage using MSBuild Coverlet
+        run: |
+          dotnet test Demo.Tests/Demo.Tests.csproj --no-build --verbosity normal \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=TestResults/coverage.opencover.xml
+      - name: End SonarCloud analysis
+        run: |
+          dotnet-sonarscanner end \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
