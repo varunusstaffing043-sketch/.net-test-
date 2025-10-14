@@ -1,4 +1,4 @@
-name: SonarCloud analysis
+name: SonarCloud Analysis (Flattened Coverage Path)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Analysis:
+  analysis:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,8 +32,8 @@ jobs:
             /o:"varunusstaffing043-sketch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml" \
-            /d:sonar.coverageReportPaths="**/TestResults/coverage.cobertura.xml"
+            /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml" \
+            /d:sonar.cs.coveragecobertura.reportPaths="TestResults/coverage.cobertura.xml"
 
       - name: Restore dependencies
         run: dotnet restore TodoApi.sln
@@ -41,53 +41,28 @@ jobs:
       - name: Build solution
         run: dotnet build TodoApi.sln --no-restore
 
-      - name: Run tests with coverage (generate OpenCover)
+      - name: Run tests with coverage (OpenCover)
         run: |
-          dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build --verbosity normal \
+          dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build \
             /p:CollectCoverage=true \
+            /p:CoverletOutput=TestResults/coverage.opencover.xml \
             /p:CoverletOutputFormat=opencover \
-            /p:CoverletOutput=TestResults/coverage.opencover.xml
+            /p:CoverletOutputDir=TestResults
 
-      - name: Run tests with coverage (generate Cobertura)
+      - name: Run tests with coverage (Cobertura)
         run: |
-          dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build --verbosity normal \
+          dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build \
             /p:CollectCoverage=true \
+            /p:CoverletOutput=TestResults/coverage.cobertura.xml \
             /p:CoverletOutputFormat=cobertura \
-            /p:CoverletOutput=TestResults/coverage.cobertura.xml
-      - name: Show TestResults directories (diagnostic)
-        run: |
-          echo "Listing TestResults directories"
-          ls -R tests/*/TestResults || true
+            /p:CoverletOutputDir=TestResults
 
-      - name: List coverage files (diagnostic)
-        run: |
-          echo "Finding coverage files"
-          find . -type f -name 'coverage*' -print || true
+      - name: Show TestResults directory
+        run: ls -R TestResults || true
 
-      - name: Show coverage file snippets (diagnostic)
-        run: |
-          if [ -f tests/TodoApi.Tests/TestResults/coverage.opencover.xml ]; then
-            echo '=== BEGIN coverage.opencover.xml ==='
-            head -n 80 tests/TodoApi.Tests/TestResults/coverage.opencover.xml || true
-            echo '=== END coverage.opencover.xml ==='
-          fi
-          if [ -f tests/TodoApi.Tests/TestResults/coverage.cobertura.xml ]; then
-            echo '=== BEGIN coverage.cobertura.xml ==='
-            head -n 80 tests/TodoApi.Tests/TestResults/coverage.cobertura.xml || true
-            echo '=== END coverage.cobertura.xml ==='
-          fi
-      - name: Validate Cobertura XML and remove if invalid
-        run: |
-          chmod +x ./.artifacts/validate_cobertura.sh
-          ./.artifacts/validate_cobertura.sh
+      - name: List coverage files
+        run: find . -type f -name 'coverage*' -print || true
 
-      - name: Upload coverage artifacts for debugging
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-files
-          path: |
-            tests/TodoApi.Tests/TestResults/coverage.cobertura.xml
-            tests/TodoApi.Tests/TestResults/coverage.opencover.xml
       - name: End SonarCloud analysis
         run: |
           dotnet-sonarscanner end \
