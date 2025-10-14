@@ -37,11 +37,4 @@ app.MapPost("/todo", (string item) =>
 .WithName("AddTodo")
 .WithOpenApi();
 
-// Prefer non-blocking shutdown
 await app.RunAsync();
-
-// Marker for WebApplicationFactory (non-static to be valid generic argument)
-public partial class Program
-{
-    protected Program() { } // satisfies Sonar S1118
-}

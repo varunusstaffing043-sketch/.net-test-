@@ -1,9 +1,8 @@
-using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net.Http;
 using Xunit;
 
-namespace TodoApi.Tests 
+namespace TodoApi.Tests
 {
     public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
     {
@@ -15,11 +14,31 @@ namespace TodoApi.Tests
         }
 
         [Fact]
-        public async Task Health_Returns_OK()
+        public async Task Get_HealthCheck_ReturnsSuccess()
         {
+            // Arrange
             var client = _factory.CreateClient();
-            var resp = await client.GetAsync("/health");
-            Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+            // Act
+            var response = await client.GetAsync("/health");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.Equal("\"OK\"", content);
+        }
+
+        [Fact]
+        public async Task Get_Todos_ReturnsSuccess()
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+
+            // Act
+            var response = await client.GetAsync("/todo");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
         }
     }
-} 
+}
