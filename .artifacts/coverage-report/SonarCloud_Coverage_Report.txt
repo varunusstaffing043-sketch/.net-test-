@@ -1,0 +1,60 @@
+SonarCloud Coverage Diagnosis Report
+
+Repository: .net-test-
+Generated: 2025-10-14T00:00:00Z (UTC)
+
+Findings summary:
+- SonarCloud shows 0% coverage likely because the Sonar scanner is configured to look for an OpenCover report at **TestResults/coverage.opencover.xml**, but the test run produced a Cobertura report (coverage.cobertura.xml).
+
+Files inspected:
+- GitHub workflow: .github/workflows/dotnet.yml
+- Test project: tests/TodoApi.Tests/TodoApi.Tests.csproj
+- Coverage report: tests/TodoApi.Tests/TestResults/10160e50-49c6-46d4-ac07-992a49d678c4/coverage.cobertura.xml
+
+Key contents (excerpts):
+
+- Workflow excerpt (dotnet.yml):
+  - sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
+  - dotnet test ... /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
+
+- csproj excerpts: contains PackageReference to coverlet.collector
+
+- coverage.cobertura.xml top:
+  - coverage line-rate="0.8333" lines-covered="20" lines-valid="24"
+  - class filename="...src/TodoApi/Program.cs"
+
+Detailed analysis and recommended fixes:
+1) Issue: Workflow expects an opencover file at TestResults/coverage.opencover.xml (sonar.cs.opencover.reportsPaths) but the produced file is coverage.cobertura.xml.
+
+2) Fix (preferred): Ensure the dotnet test invocation produces OpenCover XML and that path matches Sonar config.
+   - In the workflow, confirm the test step uses:
+     /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
+   - Confirm Sonar property: /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
+
+3) Alternate (if you prefer Cobertura): Update Sonar property to point to Cobertura report, e.g. /d:sonar.coverageReportPaths="**/TestResults/coverage.cobertura.xml" or the appropriate property for SonarCloud.
+
+4) Verification steps (locally):
+   - Run: dotnet test tests/TodoApi.Tests/TodoApi.Tests.csproj --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
+   - Ensure file is created at tests/TodoApi.Tests/TestResults/coverage.opencover.xml
+
+5) Additional SonarCloud tips:
+   - Ensure SONAR_TOKEN is set and workflow runs complete the begin/end scanner steps.
+   - Confirm project key and organization are correct in the begin step.
+   - For .NET 6+ use opencover for best compatibility with sonar.cs.opencover.reportsPaths.
+
+Exact changes you can make (patch):
+- Keep sonar.cs.opencover.reportsPaths property in dotnet-sonarscanner begin.
+- Ensure the dotnet test step outputs opencover to the path above (it currently does, but you produced Cobertura — inspect any other CI or local options that might be overriding format).
+
+How to repeat for another project:
+1) Add coverlet.collector to test project (or use coverlet.msbuild) as a PackageReference.
+2) In CI, run dotnet test with /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
+3) Configure SonarCloud scanner begin with /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml" and correct /k and /o settings.
+4) Run dotnet-sonarscanner end with /d:sonar.login token.
+5) Verify the coverage file appears and SonarCloud displays the coverage.
+
+Local script to generate a Word doc (if you have Python):
+- create a virtualenv, pip install python-docx, and run .artifacts/coverage-report/generate_report.py
+
+
+End of report.
